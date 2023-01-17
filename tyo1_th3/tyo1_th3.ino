@@ -13,10 +13,7 @@ BluetoothSerial SerialBT;
 
 // GPIO where LED is connected to
 const int ledPin = 25;
-
-const int fanPin = 34;  //GPIO A2
-
-// GPIO where the potPin is connected to
+const int fanPin = 21;  //GPIO A2
 const int potPin = 26;
 int potValue = 0;
 

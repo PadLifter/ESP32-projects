@@ -51,15 +51,23 @@ void loop() {
   currentPinRead.pin = 0;                                         // assign value '0' to pin element of struct
   currentPinRead.value = adc;                                     // Read adc value
   xQueueSendToBack(structQueue, &currentPinRead, portMAX_DELAY);  //write struct message to queue
+
+  // Send terminal value to queue
+  if (Serial.available() > 1) {
+    uint ser = Serial.parseInt();
+    currentPinRead.pin = 1;
+    currentPinRead.value = ser;
+    xQueueSendToBack(structQueue, &currentPinRead, portMAX_DELAY);
+  }
 }
 
 void displayTask(void* parameter) {
   for (;;) {
 
-    uint POT = 0;                    // temporary variable to hold pot value
-    uint TERM = 0;                   // temporary variable to hold terminal input value
+    uint POT = 0;                   // temporary variable to hold pot value
+    uint TERM = 0;                  // temporary variable to hold terminal input value
     struct pinRead currentPinRead;  // structure to hold receiv data
-    
+
     // Read structure elements from queue and check if data received successfully
     if (xQueueReceive(structQueue, &currentPinRead, portMAX_DELAY) == pdPASS) {
       // print received data elements on serial montor
@@ -90,23 +98,37 @@ void displayTask(void* parameter) {
       // If yes, store sensor value member of structure in temporary LDR variable
       if (currentPinRead.pin == 1) {
 
-        TERM = currentPinRead.value; 
+        TERM = currentPinRead.value;
+
+        // Clear row
+        display.fillRect(0, 32, 128, 14, BLACK);
+
+        // Print pot value
+        display.setTextSize(2);
+        display.setTextColor(WHITE);
+        display.setCursor(0, 32);
+        display.println(TERM);
+        BarGraph(TERM, currentPinRead.pin);
+        display.display();
       }
-     
     }
   }
-   vTaskDelete(NULL);
+  vTaskDelete(NULL);
 }
 
-void BarGraph (uint val, int pos){
-  uint w = 127 * val/4095;
- if (pos == 0){
-  display.fillRect(0, 17, 127, 14, BLACK);
-  display.drawRect(0, 17, 127, 14, WHITE);
-  display.fillRect(0, 17, w, 14, WHITE);
-  display.display();
- }
+void BarGraph(uint val, int pos) {
+  uint w = 127 * val / 4095;
+  if (pos == 0) {
+    display.fillRect(0, 17, 127, 14, BLACK);
+    display.drawRect(0, 17, 127, 14, WHITE);
+    display.fillRect(0, 17, w, 14, WHITE);
+  }
 
-Serial.println (w);
+  if (pos == 1) {
+    display.fillRect(0, 48, 127, 14, BLACK);
+    display.drawRect(0, 48, 127, 14, WHITE);
+    display.fillRect(0, 48, w, 14, WHITE);
+  }
 
+  Serial.println(w);
 }

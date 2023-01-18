@@ -8,8 +8,8 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 // Define a struct
 struct pinRead {
-  int pin;    // analog channel indentifier
-  int value;  // sensor output value
+  uint pin;    // analog channel indentifier
+  uint value;  // sensor output value
 };
 
 QueueHandle_t structQueue;
@@ -56,8 +56,8 @@ void loop() {
 void displayTask(void* parameter) {
   for (;;) {
 
-    int POT = 0;                    // temporary variable to hold pot value
-    int TERM = 0;                   // temporary variable to hold terminal input value
+    uint POT = 0;                    // temporary variable to hold pot value
+    uint TERM = 0;                   // temporary variable to hold terminal input value
     struct pinRead currentPinRead;  // structure to hold receiv data
     
     // Read structure elements from queue and check if data received successfully
@@ -90,13 +90,7 @@ void displayTask(void* parameter) {
       // If yes, store sensor value member of structure in temporary LDR variable
       if (currentPinRead.pin == 1) {
 
-        TERM = currentPinRead.value;
-       
-    
-
-        Serial.println("Display");
-        delay(1000);
- 
+        TERM = currentPinRead.value; 
       }
      
     }
@@ -105,13 +99,14 @@ void displayTask(void* parameter) {
 }
 
 void BarGraph (uint val, int pos){
-  uint w = val * (127/4095);
+  uint w = 127 * val/4095;
  if (pos == 0){
   display.fillRect(0, 17, 127, 14, BLACK);
   display.drawRect(0, 17, 127, 14, WHITE);
   display.fillRect(0, 17, w, 14, WHITE);
+  display.display();
  }
 
-
+Serial.println (w);
 
 }

@@ -33,6 +33,9 @@
 
 #include "SSD1306.h"
 
+QueueHandle_t queue;
+
+static int app_cpu = 0; // Updated by setup
 class Display : public SSD1306 
 {
   int w, h; // Width, height
@@ -167,48 +170,63 @@ static InchWorm worm1(oled,1);
 static InchWorm worm2(oled,2);
 
 
-
+bool flag = true;
 
 void setup() {
 
    oled.init();
 
-xTaskCreatePinnedToCore (
-  worm_task1, //
-  "worm1",
-  3000,
-  &worm1,
-  1,
-  NULL,
-  1
-  );
+   queue = xQueueCreate (1, 1);
 
 xTaskCreatePinnedToCore (
-  worm_task2, //
-  "worm2",
-  3000,
-  &worm2,
-  1,
-  NULL,
-  1
+  worm_task1, // Task function
+  "worm1",    // Task name
+  3000,       // Stack size
+  &worm1,     // Argument
+  4,          // Prioority of the task
+  NULL,       // No handle returned
+  1           // CPU 1
+  );
+
+
+xTaskCreatePinnedToCore (
+  worm_task2, // Task function
+  "worm2",    // Task name
+  3000,       // Stack size
+  &worm2,     // Argument
+  4,          // Prioority of the task
+  NULL,       // No handle returned
+  1           // CPU 1
   );
 
   
 // Draw at least one worm each:
-   worm1.draw(1);
-   worm2.draw(1);
   
+   worm1.draw(1);
+   worm2.draw(2);
+  
+  xQueueSend(queue, &flag, portMAX_DELAY);
 }
+
+
 
 void worm_task1(void *arg){
   for (;;){
+    xQueueReceive(queue, &flag, portMAX_DELAY);
+    for (int x=0; x<80000; ++x)
+    __asm__ __volatile__("nop");
     worm1.draw(1);
+     xQueueSend(queue, &flag, portMAX_DELAY);
   }
 }
 
 void worm_task2(void *arg){
   for (;;){
-    worm1.draw(1);
+    xQueueReceive(queue, &flag, portMAX_DELAY);
+    for (int x=0; x<80000; ++x)
+    __asm__ __volatile__("nop");
+    worm2.draw(2);
+     xQueueSend(queue, &flag, portMAX_DELAY);
   }
 }
 

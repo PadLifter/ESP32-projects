@@ -164,17 +164,54 @@ Display::clear()
 
 static Display oled;
 static InchWorm worm1(oled,1);
+static InchWorm worm2(oled,2);
+
 
 
 
 void setup() {
 
    oled.init();
+
+xTaskCreatePinnedToCore (
+  worm_task1, //
+  "worm1",
+  3000,
+  &worm1,
+  1,
+  NULL,
+  1
+  );
+
+xTaskCreatePinnedToCore (
+  worm_task2, //
+  "worm2",
+  3000,
+  &worm2,
+  1,
+  NULL,
+  1
+  );
+
   
 // Draw at least one worm each:
    worm1.draw(1);
+   worm2.draw(1);
   
 }
+
+void worm_task1(void *arg){
+  for (;;){
+    worm1.draw(1);
+  }
+}
+
+void worm_task2(void *arg){
+  for (;;){
+    worm1.draw(1);
+  }
+}
+
 
 
 void loop() 

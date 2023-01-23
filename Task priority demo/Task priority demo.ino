@@ -184,7 +184,7 @@ xTaskCreatePinnedToCore (
   "worm1",    // Task name
   3000,       // Stack size
   &worm1,     // Argument
-  4,          // Prioority of the task
+  3,          // Prioority of the task
   NULL,       // No handle returned
   1           // CPU 1
   );
@@ -195,7 +195,7 @@ xTaskCreatePinnedToCore (
   "worm2",    // Task name
   3000,       // Stack size
   &worm2,     // Argument
-  4,          // Prioority of the task
+  2,          // Prioority of the task
   NULL,       // No handle returned
   1           // CPU 1
   );
@@ -205,7 +205,7 @@ xTaskCreatePinnedToCore (
   "worm3",    // Task name
   3000,       // Stack size
   &worm3,     // Argument
-  4,          // Prioority of the task
+  1,          // Prioority of the task
   NULL,       // No handle returned
   1           // CPU 1
   );
@@ -215,7 +215,7 @@ xTaskCreatePinnedToCore (
   
    worm1.draw(1);
    worm2.draw(2);
-   worm2.draw(3);
+   worm3.draw(3);
   
   xQueueSend(queue, &flag, portMAX_DELAY);
 }
@@ -225,30 +225,27 @@ xTaskCreatePinnedToCore (
 void worm_task1(void *arg){
   for (;;){
     xQueueReceive(queue, &flag, portMAX_DELAY);
-    for (int x=0; x<80000; ++x)
-    __asm__ __volatile__("nop");
     worm1.draw(1);
      xQueueSend(queue, &flag, portMAX_DELAY);
+     vTaskDelay(300);
   }
 }
 
 void worm_task2(void *arg){
   for (;;){
     xQueueReceive(queue, &flag, portMAX_DELAY);
-    for (int x=0; x<80000; ++x)
-    __asm__ __volatile__("nop");
     worm2.draw(2);
      xQueueSend(queue, &flag, portMAX_DELAY);
+     vTaskDelay(200);
   }
 }
 
 void worm_task3(void *arg){
   for (;;){
     xQueueReceive(queue, &flag, portMAX_DELAY);
-    for (int x=0; x<80000; ++x)
-    __asm__ __volatile__("nop");
     worm3.draw(3);
      xQueueSend(queue, &flag, portMAX_DELAY);
+     vTaskDelay(100);
   }
 }
 
@@ -257,8 +254,5 @@ void worm_task3(void *arg){
 void loop() 
 {
 
-   worm1.draw(1); 
- 
-   delay(20);
 
 }

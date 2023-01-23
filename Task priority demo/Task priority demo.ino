@@ -168,6 +168,7 @@ Display::clear()
 static Display oled;
 static InchWorm worm1(oled,1);
 static InchWorm worm2(oled,2);
+static InchWorm worm3(oled,3);
 
 
 bool flag = true;
@@ -199,11 +200,22 @@ xTaskCreatePinnedToCore (
   1           // CPU 1
   );
 
+  xTaskCreatePinnedToCore (
+  worm_task3, // Task function
+  "worm3",    // Task name
+  3000,       // Stack size
+  &worm3,     // Argument
+  4,          // Prioority of the task
+  NULL,       // No handle returned
+  1           // CPU 1
+  );
+
   
 // Draw at least one worm each:
   
    worm1.draw(1);
    worm2.draw(2);
+   worm2.draw(3);
   
   xQueueSend(queue, &flag, portMAX_DELAY);
 }
@@ -226,6 +238,16 @@ void worm_task2(void *arg){
     for (int x=0; x<80000; ++x)
     __asm__ __volatile__("nop");
     worm2.draw(2);
+     xQueueSend(queue, &flag, portMAX_DELAY);
+  }
+}
+
+void worm_task3(void *arg){
+  for (;;){
+    xQueueReceive(queue, &flag, portMAX_DELAY);
+    for (int x=0; x<80000; ++x)
+    __asm__ __volatile__("nop");
+    worm3.draw(3);
      xQueueSend(queue, &flag, portMAX_DELAY);
   }
 }

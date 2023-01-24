@@ -28,10 +28,10 @@ BLEServer* pServer = NULL;
 BLECharacteristic* pCharacteristic = NULL;
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
-uint32_t value = 0;
 const int potPin = 26; // A0, pot
 int potValue = 0; // Initial potvalue
-string msg;
+float voltage = 0; //Initial voltage value
+char buffer[40]; // Buffer for BLE message
 
 
 // See the following for generating UUIDs:
@@ -99,12 +99,13 @@ void loop() {
 potValue = analogRead(potPin);
 
 //Converting 12-bit pot value to voltage between 0-3.3V
-map(potValue, 0, 4095, 0, 3.3);
+voltage = potValue / 1240.9;
 
 
     // notify changed value
     if (deviceConnected) {
-        pCharacteristic->setValue((uint8_t*)&potValue, 4);
+      sprintf(buffer, "Voltage: %.02f V", voltage);
+        pCharacteristic->setValue(buffer);
         pCharacteristic->notify();
         delay(100); // bluetooth stack will go into congestion, if too many packets are sent, in 6 hours test i was able to go as low as 3ms
     }

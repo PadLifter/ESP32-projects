@@ -1,99 +1,80 @@
-#include "painlessMesh.h"
-#include "AsyncTCP.h"
+#include "BluetoothSerial.h"
+
+// Check if Bluetooth configs are enabled
+#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
+#error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
+#endif
+
+// Bluetooth Serial object
+BluetoothSerial SerialBT;
 
 
-#define   MESH_PREFIX     "meshimeshi"
-#define   MESH_PASSWORD   "sanasala"
-#define   MESH_PORT       5555
+const int fanPin = 13;  // GPIO 21, fan control
+const int potPin = 26;  // A0, potentiometer
+int potValue = 0;
 
-// GPIO where LED is connected to
+// PWM properties
+const int freq = 5000;
+const int fanChannel = 0;
+const int resolution = 8;
 
-const int fanPin = 17;  //A3, Fan control
-const int potPin = 34;  //A2, pot
-uint adc = 0;
-uint msg_val = 0;
+// Handle received and sent messages
+String message = "";
+char incomingChar;
+int speed = 0;
 
-
-Scheduler userScheduler; // to control your personal task
-painlessMesh  mesh;
-
-// User stub
-void sendMessage() ; // Prototype so PlatformIO doesn't complain
-
-Task taskSendMessage( TASK_SECOND * 1 , TASK_FOREVER, &sendMessage );
-
-void sendMessage() {
-mesh.sendBroadcast((String)adc);
-taskSendMessage.setInterval(TASK_SECOND * 1);
-
-}
-
-// Needed for painless library
-void receivedCallback( uint32_t from, String &msg ) {
- msg_val = msg.toInt();
-}
-
-void newConnectionCallback(uint32_t nodeId) {
-    Serial.printf("--> startHere: New Connection, nodeId = %u\n", nodeId);
-}
-
-void changedConnectionCallback() {
-  Serial.printf("Changed connections\n");
-}
-
-void nodeTimeAdjustedCallback(int32_t offset) {
-    Serial.printf("Adjusted time %u. Offset = %d\n", mesh.getNodeTime(),offset);
-}
-
-
+// Timer: auxiliar variables
+unsigned long previousMillis = 0;  // Stores last time pot value was published
+const long interval = 10000;       // interval at which to publish pot value
 
 void setup() {
-  pinMode(fanPin, OUTPUT);
+  ledcAttachPin(fanPin, fanChannel);
+  ledcSetup(fanChannel, freq, resolution);
   Serial.begin(115200);
-
-
-//mesh.setDebugMsgTypes( ERROR | MESH_STATUS | CONNECTION | SYNC | COMMUNICATION | GENERAL | MSG_TYPES | REMOTE ); // all types on
-  mesh.setDebugMsgTypes( ERROR | STARTUP );  // set before init() so that you can see startup messages
-
-  mesh.init( MESH_PREFIX, MESH_PASSWORD, &userScheduler, MESH_PORT );
-  mesh.onReceive(&receivedCallback);
-  mesh.onNewConnection(&newConnectionCallback);
-  mesh.onChangedConnections(&changedConnectionCallback);
-  mesh.onNodeTimeAdjusted(&nodeTimeAdjustedCallback);
-
-  userScheduler.addTask( taskSendMessage );
-  taskSendMessage.enable();
+  SerialBT.begin("sinihammas");  // Bluetooth device name
+  Serial.println("The device started, now you can pair it with bluetooth!");
 }
 
 void loop() {
-  
-  adc = analogRead(potPin);
-  // Send pot readings
-if (msg_val > 1000 || adc > 1000)
-digitalWrite(fanPin, HIGH);
-else
-digitalWrite(fanPin, LOW);
-  // it will run the user scheduler as well
-  mesh.update();
-  
-  
+  unsigned long currentMillis = millis();
 
-  
+  // Send pot value once per 10 seconds
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;
+    potValue = analogRead(potPin);
+    //SerialBT.println(potValue);
+  }
+
+  //Read received BT messages
+  if (SerialBT.available()) {
+    char incomingChar = SerialBT.read();
+    if (incomingChar != '\n') {
+      message += String(incomingChar);
+    } else {
+      message = "";
+    }
+    Serial.write(incomingChar);
+  }
+
+  // Check received message and control led and fan accordingly
+  if (message == "led_on") {
+    digitalWrite(ledPin, HIGH);
+  } else if (message == "led_off") {
+    digitalWrite(ledPin, LOW);
+  } else if (isDigit(message[0])) {
+    speed = message.toInt();
+    if (speed >= 0 && speed <= 255) {
+      ledcWrite(fanChannel, speed);
+    }
+  }
+
   /*
   } else if (message == "fan_on") {
     digitalWrite(fanPin, HIGH);
   } else if (message == "fan_off") {
     digitalWrite(fanPin, LOW);
   }
-  
+  */
 
-
-//Setting fan speed between 0-255
-  else if (isDigit(message[0])) {
-    speed = message.toInt();
-    if (speed >= 1 && speed <= 255)
-      ;
-    ledcWrite(fanChannel, speed);
-  }
-*/
-} 
+  delay(20);
+}

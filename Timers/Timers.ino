@@ -40,11 +40,11 @@ void AlertLED::Tstart()
 
     tmr = xTimerCreate
     (
-      "MyTimer",          // Timer name
-      pdMS_TO_TICKS(100), // Period time
-      pdTRUE,             // Auto reload
-      this,               // Timer ID
-      AlertLED::callback  // callback
+      "MyTimer",                // Timer name
+      pdMS_TO_TICKS(period_ms), // Period time
+      pdTRUE,                   // Auto reload
+      this,                     // Timer ID
+      AlertLED::callback        // callback
      );
            
     if( xTimerStart(tmr, 10 ) != pdPASS ) 
@@ -67,8 +67,8 @@ Serial.print(obj->Led_pin);
 
 
 
-static AlertLED alert1(LED1, 300);
-static AlertLED alert2(LED2, 80);
+static AlertLED alert1(LED1, 10);
+static AlertLED alert2(LED2, 800);
 
 
 void setup()

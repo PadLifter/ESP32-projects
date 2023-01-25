@@ -1,15 +1,18 @@
-/*
-  Rui Santos
-  Complete project details at https://RandomNerdTutorials.com/esp-mesh-esp32-esp8266-painlessmesh/
-  
-  This is a simple example that uses the painlessMesh library: https://github.com/gmag11/painlessMesh/blob/master/examples/basic/basic.ino
-*/
-
 #include "painlessMesh.h"
+#include "AsyncTCP.h"
 
-#define   MESH_PREFIX     "whateverYouLike"
-#define   MESH_PASSWORD   "somethingSneaky"
+
+#define   MESH_PREFIX     "meshimeshi"
+#define   MESH_PASSWORD   "sanasala"
 #define   MESH_PORT       5555
+
+// GPIO where LED is connected to
+
+const int fanPin = 17;  //A3, Fan control
+const int potPin = 34;  //A2, pot
+uint adc = 0;
+uint msg_val = 0;
+
 
 Scheduler userScheduler; // to control your personal task
 painlessMesh  mesh;
@@ -20,15 +23,14 @@ void sendMessage() ; // Prototype so PlatformIO doesn't complain
 Task taskSendMessage( TASK_SECOND * 1 , TASK_FOREVER, &sendMessage );
 
 void sendMessage() {
-  String msg = "Hi from node1";
-  msg += mesh.getNodeId();
-  mesh.sendBroadcast( msg );
-  taskSendMessage.setInterval( random( TASK_SECOND * 1, TASK_SECOND * 5 ));
+mesh.sendBroadcast((String)adc);
+taskSendMessage.setInterval(TASK_SECOND * 1);
+
 }
 
 // Needed for painless library
 void receivedCallback( uint32_t from, String &msg ) {
-  Serial.printf("startHere: Received from %u msg=%s\n", from, msg.c_str());
+ msg_val = msg.toInt();
 }
 
 void newConnectionCallback(uint32_t nodeId) {
@@ -43,8 +45,12 @@ void nodeTimeAdjustedCallback(int32_t offset) {
     Serial.printf("Adjusted time %u. Offset = %d\n", mesh.getNodeTime(),offset);
 }
 
+
+
 void setup() {
+  pinMode(fanPin, OUTPUT);
   Serial.begin(115200);
+
 
 //mesh.setDebugMsgTypes( ERROR | MESH_STATUS | CONNECTION | SYNC | COMMUNICATION | GENERAL | MSG_TYPES | REMOTE ); // all types on
   mesh.setDebugMsgTypes( ERROR | STARTUP );  // set before init() so that you can see startup messages
@@ -60,6 +66,34 @@ void setup() {
 }
 
 void loop() {
+  
+  adc = analogRead(potPin);
+  // Send pot readings
+if (msg_val > 1000 || adc > 1000)
+digitalWrite(fanPin, HIGH);
+else
+digitalWrite(fanPin, LOW);
   // it will run the user scheduler as well
   mesh.update();
-}
+  
+  
+
+  
+  /*
+  } else if (message == "fan_on") {
+    digitalWrite(fanPin, HIGH);
+  } else if (message == "fan_off") {
+    digitalWrite(fanPin, LOW);
+  }
+  
+
+
+//Setting fan speed between 0-255
+  else if (isDigit(message[0])) {
+    speed = message.toInt();
+    if (speed >= 1 && speed <= 255)
+      ;
+    ledcWrite(fanChannel, speed);
+  }
+*/
+} 

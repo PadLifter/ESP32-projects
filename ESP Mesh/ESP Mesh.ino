@@ -1,9 +1,14 @@
+/*
+  Rui Santos
+  Complete project details at https://RandomNerdTutorials.com/esp-mesh-esp32-esp8266-painlessmesh/
+  
+  This is a simple example that uses the painlessMesh library: https://github.com/gmag11/painlessMesh/blob/master/examples/basic/basic.ino
+*/
+
 #include "painlessMesh.h"
-#include "AsyncTCP.h"
 
-
-#define   MESH_PREFIX     "meshimeshi"
-#define   MESH_PASSWORD   "sanasala"
+#define   MESH_PREFIX     "whateverYouLike"
+#define   MESH_PASSWORD   "somethingSneaky"
 #define   MESH_PORT       5555
 
 Scheduler userScheduler; // to control your personal task
@@ -15,7 +20,7 @@ void sendMessage() ; // Prototype so PlatformIO doesn't complain
 Task taskSendMessage( TASK_SECOND * 1 , TASK_FOREVER, &sendMessage );
 
 void sendMessage() {
-  String msg = "Hi from Feather! :)";
+  String msg = "Hi from node1";
   msg += mesh.getNodeId();
   mesh.sendBroadcast( msg );
   taskSendMessage.setInterval( random( TASK_SECOND * 1, TASK_SECOND * 5 ));
@@ -38,37 +43,8 @@ void nodeTimeAdjustedCallback(int32_t offset) {
     Serial.printf("Adjusted time %u. Offset = %d\n", mesh.getNodeTime(),offset);
 }
 
-// GPIO where LED is connected to
-const int ledPin = 25;  //LED output
-const int fanPin = 21;  //Fan control
-const int potPin = 26;  //A0, pot
-const int freq = 5000;
-int potValue = 0;
-
-// setting PWM properties
-const int fanChannel = 0;
-const int resolution = 8;
-
-// Handle received and sent messages
-String message = "";
-char incomingChar;
-int speed = 0;
-
-// Timer: auxiliar variables
-unsigned long previousMillis = 0;  // Stores last time temperature was published
-const long interval = 3000;        // interval at which to publish sensor readings
-
-
-
 void setup() {
-  pinMode(ledPin, OUTPUT);
-  pinMode(fanPin, OUTPUT);
   Serial.begin(115200);
-
-  // configure fan PWM functionalitites
-  ledcSetup(fanChannel, freq, resolution);
-  // attach the channel to the GPIO to be controlled
-  ledcAttachPin(fanPin, fanChannel);
 
 //mesh.setDebugMsgTypes( ERROR | MESH_STATUS | CONNECTION | SYNC | COMMUNICATION | GENERAL | MSG_TYPES | REMOTE ); // all types on
   mesh.setDebugMsgTypes( ERROR | STARTUP );  // set before init() so that you can see startup messages
@@ -84,33 +60,6 @@ void setup() {
 }
 
 void loop() {
-  unsigned long currentMillis = millis();
-
-  // Send pot readings
-  
   // it will run the user scheduler as well
   mesh.update();
-    potValue = analogRead(potPin);
-  
-
-  
-  /*
-  } else if (message == "fan_on") {
-    digitalWrite(fanPin, HIGH);
-  } else if (message == "fan_off") {
-    digitalWrite(fanPin, LOW);
-  }
-  
-
-
-//Setting fan speed between 0-255
-  else if (isDigit(message[0])) {
-    speed = message.toInt();
-    if (speed >= 1 && speed <= 255)
-      ;
-    ledcWrite(fanChannel, speed);
-  }
-*/
-
-  delay(20);
-} 
+}

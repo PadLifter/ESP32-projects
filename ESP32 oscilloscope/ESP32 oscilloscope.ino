@@ -7,8 +7,8 @@ int potValue = 0;   // Storing potValue
 void setup() {
   Serial.begin(115200);
   delay(1000);
-  analogReadResolution(8);
-  analogSetAttenuation(ADC_11db); 
+  analogReadResolution(8);        // Sets the sample bits and read resolution
+  analogSetAttenuation(ADC_11db); // Sets the input attenuation
 }
 
 void loop() {

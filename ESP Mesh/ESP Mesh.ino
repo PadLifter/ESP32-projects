@@ -31,6 +31,8 @@ taskSendMessage.setInterval(TASK_SECOND * 1);
 // Needed for painless library
 void receivedCallback( uint32_t from, String &msg ) {
  msg_val = msg.toInt();
+ Serial.print ("Recieved value: ");
+ Serial.println (msg_val);
 }
 
 void newConnectionCallback(uint32_t nodeId) {

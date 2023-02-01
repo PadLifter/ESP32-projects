@@ -16,7 +16,7 @@ void setup() {
 
 void tableWrite(uint8_t adcValue, uint8_t potValueTrig){
   sine[sampleCount] = adcValue;
-  if(sine[0] - potValueTrig > -2 && sine[0] - potValueTrig < 2){
+  if(sine[0] - potValueTrig > -4 && sine[0] - potValueTrig < 4){
     if(sampleCount == 1 && sine[1] <= sine[0]){
     sampleCount = 0;
     Serial.print("Voltage decreasing");
@@ -38,8 +38,10 @@ void loop() {
   potValueTrig = analogRead(potPin); // Reading ADC potValue
   adcValue = analogRead(measurePin); // Reading ADC voltage value
   tableWrite(adcValue, potValueTrig);
-
-
+  Serial.println("Voltage: ");
+  Serial.println(adcValue);
+  Serial.println("potValue: ");
+  Serial.println(potValueTrig);
   
 }
 
